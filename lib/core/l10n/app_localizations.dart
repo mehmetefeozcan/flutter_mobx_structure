@@ -97,14 +97,8 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Frent'**
+  /// **'My App'**
   String get appName;
-
-  /// No description provided for @loremIpsum.
-  ///
-  /// In en, this message translates to:
-  /// **'Lorem Ipsum'**
-  String get loremIpsum;
 
   /// No description provided for @actionRetry.
   ///
@@ -160,35 +154,11 @@ abstract class AppLocalizations {
   /// **'You are not allowed to perform this action.'**
   String get errorForbidden;
 
-  /// No description provided for @errorEmailAlreadyExists.
-  ///
-  /// In en, this message translates to:
-  /// **'An account with this email already exists. Try signing in.'**
-  String get errorEmailAlreadyExists;
-
-  /// No description provided for @errorPhoneAlreadyExists.
-  ///
-  /// In en, this message translates to:
-  /// **'An account with this phone number already exists. Try signing in.'**
-  String get errorPhoneAlreadyExists;
-
-  /// No description provided for @errorEmailNotVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Your email address is not verified yet. We sent the verification link to your email.'**
-  String get errorEmailNotVerified;
-
   /// No description provided for @errorRateLimited.
   ///
   /// In en, this message translates to:
   /// **'Too many attempts. Please wait a while and try again.'**
   String get errorRateLimited;
-
-  /// No description provided for @errorInvalidResetLink.
-  ///
-  /// In en, this message translates to:
-  /// **'This link is invalid or has expired. Request a new one.'**
-  String get errorInvalidResetLink;
 
   /// No description provided for @errorServiceUnavailable.
   ///

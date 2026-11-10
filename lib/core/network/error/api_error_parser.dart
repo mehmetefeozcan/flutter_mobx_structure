@@ -1,17 +1,11 @@
 import 'package:flutter_mobx_structure/core/l10n/app_localizations.dart';
 import 'package:flutter_mobx_structure/core/network/result.dart';
 
-/// API hata metinlerini (backend anahtarları veya better-auth mesajları)
-/// kullanıcıya gösterilecek l10n metinlerine çevirir.
+/// API hata metinlerini (backend anahtarları) kullanıcıya gösterilecek
+/// l10n metinlerine çevirir.
 ///
-/// Öncelik: bağlantı/zaman aşımı tipi → bilinen backend anahtarı → HTTP durumu → hata tipi.
+/// Öncelik: bağlantı/zaman aşımı tipi → bilinen backend anahtarı → hata tipi.
 abstract final class ApiErrorParser {
-  /// better-auth, e-postası doğrulanmamış hesabın girişini bu mesajla reddeder.
-  static bool isEmailNotVerified(ApiException? error) {
-    final message = error?.message.toLowerCase();
-    return message == 'email not verified' || message == 'email_not_verified';
-  }
-
   static String parse(ApiException? error, AppLocalizations l10n) {
     if (error == null) return l10n.errorUnknown;
 
@@ -30,8 +24,9 @@ abstract final class ApiErrorParser {
     return _byType(error.type, l10n);
   }
 
-  /// Backend'in döndüğü bilinen mesaj anahtarları. Feature'a özel anahtarlar
-  /// (ör. auth) kendi feature'larında ele alınmalı.
+  /// Backend'in döndüğü bilinen mesaj anahtarları (örnek). Kendi backend
+  /// sözleşmene göre genişlet; feature'a özel anahtarlar (ör. auth) kendi
+  /// feature'larında ele alınmalı.
   static String? _byKey(String key, AppLocalizations l10n) {
     switch (key) {
       case 'server_error':

@@ -1,7 +1,6 @@
 {
     "@@locale": "en",
-    "appName": "Frent",
-    "loremIpsum": "Lorem Ipsum",
+    "appName": "My App",
     "actionRetry": "Try again",
     "errorNetwork": "Could not connect to the internet.",
     "errorTimeout": "The server did not respond. Please try again.",
@@ -11,10 +10,6 @@
     "errorNotFound": "The requested content could not be found.",
     "errorUnauthorized": "Your session has expired. Please sign in again.",
     "errorForbidden": "You are not allowed to perform this action.",
-    "errorEmailAlreadyExists": "An account with this email already exists. Try signing in.",
-    "errorPhoneAlreadyExists": "An account with this phone number already exists. Try signing in.",
-    "errorEmailNotVerified": "Your email address is not verified yet. We sent the verification link to your email.",
     "errorRateLimited": "Too many attempts. Please wait a while and try again.",
-    "errorInvalidResetLink": "This link is invalid or has expired. Request a new one.",
     "errorServiceUnavailable": "This action is unavailable right now. Please try again later."
 }

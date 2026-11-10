@@ -12,7 +12,7 @@ void main() {
     await tester.pumpWidget(MyApp(router: appRouter.router));
     await tester.pumpAndSettle();
 
-    expect(find.text('Frent'), findsOneWidget);
+    expect(find.text('My App'), findsOneWidget);
   });
 
   testWidgets('hata rotası tipe göre l10n metnini ve yeniden dene butonunu gösterir', (

@@ -10,10 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Frent';
-
-  @override
-  String get loremIpsum => 'Lorem Ipsum';
+  String get appName => 'My App';
 
   @override
   String get actionRetry => 'Try again';
@@ -45,24 +42,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorForbidden => 'You are not allowed to perform this action.';
 
   @override
-  String get errorEmailAlreadyExists =>
-      'An account with this email already exists. Try signing in.';
-
-  @override
-  String get errorPhoneAlreadyExists =>
-      'An account with this phone number already exists. Try signing in.';
-
-  @override
-  String get errorEmailNotVerified =>
-      'Your email address is not verified yet. We sent the verification link to your email.';
-
-  @override
   String get errorRateLimited =>
       'Too many attempts. Please wait a while and try again.';
-
-  @override
-  String get errorInvalidResetLink =>
-      'This link is invalid or has expired. Request a new one.';
 
   @override
   String get errorServiceUnavailable =>
