@@ -1,7 +1,7 @@
 import 'package:flutter_mobx_structure/core/network/interceptors/global_error_interceptor.dart';
 import 'package:flutter_mobx_structure/core/network/interceptors/global_error_handler.dart';
 import 'package:flutter_mobx_structure/core/network/interceptors/auth_interceptor.dart';
-import 'package:flutter_mobx_structure/core/storage/auth_storage.dart';
+import 'package:flutter_mobx_structure/core/network/auth/token_provider.dart';
 import 'package:flutter_mobx_structure/app/env/env.dart';
 
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -14,7 +14,7 @@ import 'package:dio/dio.dart';
 @module
 abstract class NetworkModule {
   @lazySingleton
-  Dio dio(AuthStorage authStorage, GlobalErrorHandler errorHandler) {
+  Dio dio(TokenProvider tokenProvider, GlobalErrorHandler errorHandler) {
     final dio = Dio(
       BaseOptions(
         baseUrl: Env.apiBaseUrl,
@@ -28,8 +28,8 @@ abstract class NetworkModule {
     // Sıra önemli: GlobalErrorInterceptor, AuthInterceptor'ın eklediği
     // Authorization header'ına bakarak 401'in oturum düşmesi olup olmadığına karar verir.
     dio.interceptors.addAll([
-      AuthInterceptor(authStorage),
-      GlobalErrorInterceptor(authStorage, errorHandler),
+      AuthInterceptor(tokenProvider),
+      GlobalErrorInterceptor(tokenProvider, errorHandler),
       if (kDebugMode)
         PrettyDioLogger(
           requestHeader: true,

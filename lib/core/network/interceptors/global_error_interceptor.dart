@@ -1,6 +1,6 @@
 import 'package:flutter_mobx_structure/core/enums/app_error_enums.dart';
 import 'package:flutter_mobx_structure/core/network/interceptors/global_error_handler.dart';
-import 'package:flutter_mobx_structure/core/storage/auth_storage.dart';
+import 'package:flutter_mobx_structure/core/network/auth/token_provider.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
@@ -8,7 +8,7 @@ import 'package:dio/dio.dart';
 import 'dart:async';
 
 /// Sayfadan bağımsız hataları tek yerde yakalar ve [GlobalErrorHandler]'a iletir:
-/// - 401 (token gönderilmişse): oturum temizlenir → `sessionExpired`
+/// - 401 (token gönderilmişse): [TokenProvider.onSessionExpired] çağrılır → `sessionExpired`
 /// - 503: `maintenance`
 ///
 /// Hata yine de servise iletilir; `ApiException.handledGlobally` ile işaretlenir ki
@@ -19,10 +19,10 @@ class GlobalErrorInterceptor extends Interceptor {
   /// Aynı hata tipi bu süre içinde tekrar gelirse yeniden yönlendirilmez.
   static const _cooldown = Duration(seconds: 2);
 
-  final AuthStorage _authStorage;
+  final TokenProvider _tokenProvider;
   final GlobalErrorHandler _handler;
 
-  GlobalErrorInterceptor(this._authStorage, this._handler);
+  GlobalErrorInterceptor(this._tokenProvider, this._handler);
 
   AppErrorEnums? _lastType;
   DateTime? _lastHandledAt;
@@ -62,7 +62,7 @@ class GlobalErrorInterceptor extends Interceptor {
 
     try {
       if (type == AppErrorEnums.sessionExpired) {
-        await _authStorage.clearSession();
+        await _tokenProvider.onSessionExpired();
       }
       await _handler.handle(type);
     } catch (e, st) {
