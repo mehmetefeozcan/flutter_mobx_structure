@@ -83,7 +83,10 @@ void main() {
       handler: _FakeGlobalErrorHandler(),
     );
     await _get(withToken.service);
-    expect(withToken.adapter.lastRequest!.headers['Authorization'], 'Bearer abc');
+    expect(
+      withToken.adapter.lastRequest!.headers['Authorization'],
+      'Bearer abc',
+    );
 
     final withoutToken = _build(
       status: 200,
@@ -94,20 +97,23 @@ void main() {
     expect(withoutToken.adapter.lastRequest!.headers['Authorization'], isNull);
   });
 
-  test('token ile gelen 401: oturum kapatılır, hata global işaretlenir', () async {
-    final tokens = _FakeTokenProvider('abc');
-    final handler = _FakeGlobalErrorHandler();
-    final result = await _get(
-      _build(status: 401, tokens: tokens, handler: handler).service,
-    );
-    await Future<void>.delayed(Duration.zero);
+  test(
+    'token ile gelen 401: oturum kapatılır, hata global işaretlenir',
+    () async {
+      final tokens = _FakeTokenProvider('abc');
+      final handler = _FakeGlobalErrorHandler();
+      final result = await _get(
+        _build(status: 401, tokens: tokens, handler: handler).service,
+      );
+      await Future<void>.delayed(Duration.zero);
 
-    final error = (result as Failure<Object?, ApiException>).error;
-    expect(error.type, ApiErrorType.unauthorized);
-    expect(error.handledGlobally, isTrue);
-    expect(tokens.expiredCount, 1);
-    expect(handler.handled, [AppErrorEnums.sessionExpired]);
-  });
+      final error = (result as Failure<Object?, ApiException>).error;
+      expect(error.type, ApiErrorType.unauthorized);
+      expect(error.handledGlobally, isTrue);
+      expect(tokens.expiredCount, 1);
+      expect(handler.handled, [AppErrorEnums.sessionExpired]);
+    },
+  );
 
   test('token olmadan gelen 401 oturum düşmesi sayılmaz', () async {
     final tokens = _FakeTokenProvider(null);
@@ -123,19 +129,22 @@ void main() {
     expect(handler.handled, isEmpty);
   });
 
-  test('art arda gelen 503 hataları cooldown ile tek yönlendirme yapar', () async {
-    final handler = _FakeGlobalErrorHandler();
-    final built = _build(
-      status: 503,
-      tokens: _FakeTokenProvider(null),
-      handler: handler,
-    );
-    await _get(built.service);
-    await _get(built.service);
-    await Future<void>.delayed(Duration.zero);
+  test(
+    'art arda gelen 503 hataları cooldown ile tek yönlendirme yapar',
+    () async {
+      final handler = _FakeGlobalErrorHandler();
+      final built = _build(
+        status: 503,
+        tokens: _FakeTokenProvider(null),
+        handler: handler,
+      );
+      await _get(built.service);
+      await _get(built.service);
+      await Future<void>.delayed(Duration.zero);
 
-    expect(handler.handled, [AppErrorEnums.maintenance]);
-  });
+      expect(handler.handled, [AppErrorEnums.maintenance]);
+    },
+  );
 
   test('sunucu mesajı ve tür eşlemesi', () async {
     final result = await _get(

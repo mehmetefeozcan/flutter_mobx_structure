@@ -9,7 +9,9 @@ import 'dart:async';
 class _TestStore extends BaseStore {}
 
 /// Token iptal edilene kadar bekleyen sahte istek.
-Future<Result<String, ApiException>> _hangUntilCancelled(CancelToken token) async {
+Future<Result<String, ApiException>> _hangUntilCancelled(
+  CancelToken token,
+) async {
   await token.whenCancel;
   return const Failure(
     ApiException('request_cancelled', type: ApiErrorType.cancelled),
@@ -48,7 +50,11 @@ void main() {
 
     await store.runResult<int>(
       (_) async => const Failure(
-        ApiException('y', type: ApiErrorType.unauthorized, handledGlobally: true),
+        ApiException(
+          'y',
+          type: ApiErrorType.unauthorized,
+          handledGlobally: true,
+        ),
       ),
     );
     expect(store.lastError, isNull);

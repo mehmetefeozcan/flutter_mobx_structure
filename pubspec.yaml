@@ -37,6 +37,8 @@ dependencies:
   flutter_svg: ^2.3.2
   # optimizing
   flutter_screenutil: ^5.9.3
+  # font
+  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:

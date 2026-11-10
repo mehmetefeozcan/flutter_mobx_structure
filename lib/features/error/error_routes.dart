@@ -14,7 +14,8 @@ abstract final class ErrorRoutes {
       path: '$path/:$_typeParam',
       builder: (context, state) {
         final type =
-            AppErrorEnums.values.asNameMap()[state.pathParameters[_typeParam]] ??
+            AppErrorEnums.values
+                .asNameMap()[state.pathParameters[_typeParam]] ??
             AppErrorEnums.wentWrong;
         return ErrorView(type: type);
       },

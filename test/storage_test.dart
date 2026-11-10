@@ -32,23 +32,26 @@ void main() {
     expect(second, first);
   });
 
-  test('StoredTokenProvider token yazar, okur ve oturum düşünce siler', () async {
-    final storage = LocalStorage(
-      await Hive.openBox<dynamic>(LocalStorage.settingsBoxName),
-      await LocalStorage.openSecureBox(Hive.generateSecureKey()),
-    );
-    final provider = StoredTokenProvider(storage);
+  test(
+    'StoredTokenProvider token yazar, okur ve oturum düşünce siler',
+    () async {
+      final storage = LocalStorage(
+        await Hive.openBox<dynamic>(LocalStorage.settingsBoxName),
+        await LocalStorage.openSecureBox(Hive.generateSecureKey()),
+      );
+      final provider = StoredTokenProvider(storage);
 
-    expect(await provider.getToken(), isNull);
-    expect(provider.hasSession, isFalse);
+      expect(await provider.getToken(), isNull);
+      expect(provider.hasSession, isFalse);
 
-    await provider.saveToken('abc');
-    expect(await provider.getToken(), 'abc');
-    expect(provider.hasSession, isTrue);
+      await provider.saveToken('abc');
+      expect(await provider.getToken(), 'abc');
+      expect(provider.hasSession, isTrue);
 
-    await provider.onSessionExpired();
-    expect(await provider.getToken(), isNull);
-  });
+      await provider.onSessionExpired();
+      expect(await provider.getToken(), isNull);
+    },
+  );
 
   test('şifreli box diskte düz metin içermez', () async {
     final box = await LocalStorage.openSecureBox(Hive.generateSecureKey());
@@ -57,7 +60,10 @@ void main() {
 
     final bytes = File('${dir.path}/${LocalStorage.secureBoxName}.hive')
         .readAsBytesSync();
-    expect(String.fromCharCodes(bytes), isNot(contains('super-secret-token-value')));
+    expect(
+      String.fromCharCodes(bytes),
+      isNot(contains('super-secret-token-value')),
+    );
   });
 
   test('anahtar kaybolursa şifreli box sıfırlanır, uygulama çökmez', () async {
@@ -66,7 +72,9 @@ void main() {
     await box.put('auth_token', 'old');
     await box.close();
 
-    final recovered = await LocalStorage.openSecureBox(Hive.generateSecureKey());
+    final recovered = await LocalStorage.openSecureBox(
+      Hive.generateSecureKey(),
+    );
 
     expect(recovered.isOpen, isTrue);
     expect(recovered.get('auth_token'), isNull);
