@@ -1,16 +1,13 @@
+// project imports
+import 'package:flutter_mobx_structure/app/di/injector.dart';
+import 'package:flutter_mobx_structure/app/router/app_router.dart';
+import 'package:flutter_mobx_structure/app/app.dart';
+// third party imports
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MainApp());
-}
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await configureDependencies();
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
-    );
-  }
+  runApp(MyApp(router: getIt<AppRouter>().router));
 }
