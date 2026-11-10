@@ -2,16 +2,41 @@ import 'package:flutter_mobx_structure/app/app.dart';
 import 'package:flutter_mobx_structure/app/router/app_router.dart';
 import 'package:flutter_mobx_structure/core/enums/app_error_enums.dart';
 import 'package:flutter_mobx_structure/core/network/interceptors/global_error_interceptor.dart';
+import 'package:flutter_mobx_structure/core/state/language_store.dart';
+import 'package:flutter_mobx_structure/core/state/theme_store.dart';
+import 'package:flutter_mobx_structure/core/storage/local_storage.dart';
 import 'package:flutter_mobx_structure/features/error/error_routes.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/widgets.dart' show Size;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart' show ThemeMode, Theme, Brightness;
+
+import 'helpers/test_local_storage.dart';
 
 void main() {
+  late LocalStorage storage;
+  late Future<void> Function() dispose;
+
+  setUpAll(() async {
+    final opened = await openTestStorage();
+    storage = opened.storage;
+    dispose = opened.dispose;
+  });
+
+  setUp(() => storage.settings.clear());
+
+  tearDownAll(() => dispose());
+
+  MyApp buildApp(AppRouter appRouter, {ThemeStore? themeStore}) => MyApp(
+    router: appRouter.router,
+    themeStore: themeStore ?? ThemeStore(storage),
+    languageStore: LanguageStore(storage),
+  );
+
   testWidgets('açılışta splash gösterilir', (tester) async {
     final appRouter = AppRouter();
-    await tester.pumpWidget(MyApp(router: appRouter.router));
+    await tester.pumpWidget(buildApp(appRouter));
     await tester.pumpAndSettle();
 
     expect(find.text('My App'), findsOneWidget);
@@ -24,7 +49,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(MyApp(router: AppRouter().router));
+      await tester.pumpWidget(buildApp(AppRouter()));
       await tester.pumpAndSettle();
 
       expect(ScreenUtil().scaleWidth, closeTo(2, 1e-9));
@@ -32,11 +57,28 @@ void main() {
     },
   );
 
+  testWidgets('tema seçimi değişince uygulama yeniden kurulur', (tester) async {
+    final themeStore = ThemeStore(storage);
+    await tester.pumpWidget(buildApp(AppRouter(), themeStore: themeStore));
+    await tester.pumpAndSettle();
+
+    Brightness current() =>
+        Theme.of(tester.element(find.text('My App'))).brightness;
+
+    await tester.runAsync(() => themeStore.setThemeMode(ThemeMode.dark));
+    await tester.pumpAndSettle();
+    expect(current(), Brightness.dark);
+
+    await tester.runAsync(() => themeStore.setThemeMode(ThemeMode.light));
+    await tester.pumpAndSettle();
+    expect(current(), Brightness.light);
+  });
+
   testWidgets(
     'hata rotası tipe göre l10n metnini ve yeniden dene butonunu gösterir',
     (tester) async {
       final appRouter = AppRouter();
-      await tester.pumpWidget(MyApp(router: appRouter.router));
+      await tester.pumpWidget(buildApp(appRouter));
       await tester.pumpAndSettle();
 
       appRouter.router.go(ErrorRoutes.location(AppErrorEnums.noConnection));

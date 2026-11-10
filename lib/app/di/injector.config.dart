@@ -24,6 +24,8 @@ import 'package:flutter_mobx_structure/core/network/custom_dio_service.dart'
     as _i259;
 import 'package:flutter_mobx_structure/core/network/interceptors/global_error_handler.dart'
     as _i570;
+import 'package:flutter_mobx_structure/core/state/language_store.dart' as _i386;
+import 'package:flutter_mobx_structure/core/state/theme_store.dart' as _i951;
 import 'package:flutter_mobx_structure/core/storage/encryption_key_store.dart'
     as _i954;
 import 'package:flutter_mobx_structure/core/storage/local_storage.dart'
@@ -59,6 +61,12 @@ extension GetItInjectableX on _i174.GetIt {
     await gh.singletonAsync<_i680.LocalStorage>(
       () => _i680.LocalStorage.create(gh<_i954.EncryptionKeyStore>()),
       preResolve: true,
+    );
+    gh.singleton<_i386.LanguageStore>(
+      () => _i386.LanguageStore(gh<_i680.LocalStorage>()),
+    );
+    gh.singleton<_i951.ThemeStore>(
+      () => _i951.ThemeStore(gh<_i680.LocalStorage>()),
     );
     gh.lazySingleton<_i551.StoredTokenProvider>(
       () => _i551.StoredTokenProvider(gh<_i680.LocalStorage>()),
