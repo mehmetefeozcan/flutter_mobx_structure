@@ -16,15 +16,15 @@ enum ApiErrorType {
 }
 
 class ApiException implements Exception {
-  /// Sunucu mesajı veya kısa bir anahtar. Kullanıcıya doğrudan gösterilmez;
-  /// UI metni `ApiErrorParser` ile l10n'dan üretilir. Log/debug içindir.
+  /// Sunucu mesajı veya kısa bir anahtar; log/debug içindir. Kullanıcıya
+  /// gösterilecek metin `error.localized(context.l10n)` ile türden üretilir.
   final String message;
   final int? statusCode;
   final ApiErrorType type;
   final Object? responseData;
 
-  /// `GlobalErrorInterceptor` bu hatayı yakalayıp hata ekranına yönlendirdiyse
-  /// `true` olur; sayfa ayrıca hata mesajı göstermemelidir.
+  /// Hata `GlobalErrorHandler` tarafından tam ekran ele alındıysa `true`;
+  /// sayfa ayrıca hata mesajı göstermemelidir.
   final bool handledGlobally;
 
   /// Hatanın orijinal nedeni (ör. `DioException`, `FormatException`).
@@ -41,30 +41,30 @@ class ApiException implements Exception {
     this.stackTrace,
   });
 
-  ApiException copyWith({bool? handledGlobally}) => ApiException(
-    message,
-    statusCode: statusCode,
-    type: type,
-    responseData: responseData,
-    handledGlobally: handledGlobally ?? this.handledGlobally,
-    cause: cause,
-    stackTrace: stackTrace,
-  );
-
   @override
   String toString() => 'ApiException[$type]: $message (status: $statusCode)';
 }
 
-sealed class Result<S, E extends Exception> {
+/// Ağ çağrısının sonucu: [Success] veri, [Failure] [ApiException] taşır.
+///
+/// ```dart
+/// switch (await service.request(...)) {
+///   case Success(:final data): ...
+///   case Failure(:final error): ...
+/// }
+/// ```
+sealed class Result<T> {
   const Result();
 }
 
-final class Success<S, E extends Exception> extends Result<S, E> {
-  final S data;
+final class Success<T> extends Result<T> {
   const Success(this.data);
+
+  final T data;
 }
 
-final class Failure<S, E extends Exception> extends Result<S, E> {
-  final E error;
+final class Failure<T> extends Result<T> {
   const Failure(this.error);
+
+  final ApiException error;
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_mobx_structure/core/network/interceptors/global_error_interceptor.dart';
-import 'package:flutter_mobx_structure/core/network/interceptors/global_error_handler.dart';
+import 'package:flutter_mobx_structure/core/network/global_error.dart';
 import 'package:flutter_mobx_structure/core/network/interceptors/auth_interceptor.dart';
 import 'package:flutter_mobx_structure/core/network/auth/token_provider.dart';
 import 'package:flutter_mobx_structure/app/env/env.dart';

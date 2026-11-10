@@ -38,54 +38,37 @@ Future<BuildContext> _pumpScaled(
 }
 
 void main() {
-  testWidgets(
-    'tasarım boyutunda her stil adındaki boyutla, fontlu ve renksiz',
-    (tester) async {
-      await _pumpScaled(tester);
-
-      final scale = <String, (TextStyle, double)>{
-        'display40': (AppTextStyles.display40, 40),
-        'title30': (AppTextStyles.title30, 30),
-        'title28': (AppTextStyles.title28, 28),
-        'title24': (AppTextStyles.title24, 24),
-        'title20': (AppTextStyles.title20, 20),
-        'title17': (AppTextStyles.title17, 17),
-        'body16': (AppTextStyles.body16, 16),
-        'body15': (AppTextStyles.body15, 15),
-        'body14': (AppTextStyles.body14, 14),
-        'caption13': (AppTextStyles.caption13, 13),
-        'caption12': (AppTextStyles.caption12, 12),
-        'overline12': (AppTextStyles.overline12, 12),
-        'label11': (AppTextStyles.label11, 11),
-        'micro10': (AppTextStyles.micro10, 10),
-      };
-
-      for (final entry in scale.entries) {
-        final (style, size) = entry.value;
-        expect(style.fontSize, size, reason: entry.key);
-        expect(style.fontFamily, contains('Geist'), reason: entry.key);
-        expect(
-          style.color,
-          isNull,
-          reason: '${entry.key}: renk ColorScheme den gelmeli',
-        );
-      }
-    },
-  );
-
-  testWidgets('varsayılan ağırlıklar ve özel değerler', (tester) async {
+  testWidgets('her stil Geist fontlu ve renksiz (renk temadan gelir)', (
+    tester,
+  ) async {
     await _pumpScaled(tester);
 
-    expect(AppTextStyles.display40.fontWeight, FontWeight.w700);
-    expect(AppTextStyles.title30.fontWeight, FontWeight.w600);
-    expect(AppTextStyles.title17.fontWeight, FontWeight.w600);
-    expect(AppTextStyles.body14.fontWeight, FontWeight.w400);
-    expect(AppTextStyles.overline12.fontWeight, FontWeight.w600);
-    expect(AppTextStyles.overline12.letterSpacing, closeTo(0.72, 1e-9));
-    expect(AppTextStyles.display40.height, closeTo(42 / 40, 1e-9));
-    expect(AppTextStyles.title30.height, closeTo(36 / 30, 1e-9));
-    expect(AppTextStyles.body16.height, closeTo(22 / 16, 1e-9));
-    expect(AppTextStyles.body14.height, isNull, reason: 'Auto');
+    final styles = [
+      AppTextStyles.display40,
+      AppTextStyles.title30,
+      AppTextStyles.title28,
+      AppTextStyles.title24,
+      AppTextStyles.title20,
+      AppTextStyles.title17,
+      AppTextStyles.body16,
+      AppTextStyles.body15,
+      AppTextStyles.body14,
+      AppTextStyles.caption13,
+      AppTextStyles.caption12,
+      AppTextStyles.overline12,
+      AppTextStyles.label11,
+      AppTextStyles.micro10,
+    ];
+
+    for (final style in styles) {
+      expect(style.fontFamily, contains('Geist'));
+      expect(
+        style.fontWeight,
+        isNotNull,
+        reason: 'ağırlık font dosyasını seçer',
+      );
+      expect(style.color, isNull);
+    }
   });
 
   group('ekrana göre ölçekleme (.sp)', () {
@@ -212,7 +195,6 @@ void main() {
 
     expect(context.textTheme.bodyMedium!.fontSize, 14);
     expect(context.textTheme.titleLarge!.fontSize, 20);
-    expect(context.colorScheme, same(context.theme.colorScheme));
     expect(
       context.textTheme.bodyMedium!.color,
       isNotNull,

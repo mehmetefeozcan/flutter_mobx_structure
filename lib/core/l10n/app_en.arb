@@ -2,6 +2,7 @@
     "@@locale": "en",
     "appName": "My App",
     "actionRetry": "Try again",
+    "actionContinue": "Continue",
     "errorNetwork": "Could not connect to the internet.",
     "errorTimeout": "The server did not respond. Please try again.",
     "errorServer": "Something went wrong on our side. Please try again later.",

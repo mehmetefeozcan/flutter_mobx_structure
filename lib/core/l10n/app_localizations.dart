@@ -106,6 +106,12 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get actionRetry;
 
+  /// No description provided for @actionContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get actionContinue;
+
   /// No description provided for @errorNetwork.
   ///
   /// In en, this message translates to:

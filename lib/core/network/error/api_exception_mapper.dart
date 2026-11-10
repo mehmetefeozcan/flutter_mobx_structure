@@ -1,4 +1,4 @@
-import 'package:flutter_mobx_structure/core/network/interceptors/global_error_interceptor.dart';
+import 'package:flutter_mobx_structure/core/network/global_error.dart';
 import 'package:flutter_mobx_structure/core/network/result.dart';
 
 import 'package:dio/dio.dart';
@@ -35,18 +35,23 @@ abstract final class ApiExceptionMapper {
       _ => _extractMessage(data) ?? e.message ?? type.name,
     };
 
-    final exception = ApiException(
+    // GlobalErrorInterceptor ile aynı karar: global hatayı sayfa göstermez.
+    final handledGlobally =
+        GlobalError.fromResponse(
+          statusCode: statusCode,
+          hadToken: e.requestOptions.headers['Authorization'] != null,
+        ) !=
+        null;
+
+    return ApiException(
       message,
       statusCode: statusCode,
       type: type,
       responseData: data,
+      handledGlobally: handledGlobally,
       cause: e,
       stackTrace: e.stackTrace,
     );
-
-    final handled =
-        e.requestOptions.extra[GlobalErrorInterceptor.handledKey] == true;
-    return handled ? exception.copyWith(handledGlobally: true) : exception;
   }
 
   static ApiErrorType _typeForStatus(int? statusCode) => switch (statusCode) {
@@ -60,13 +65,14 @@ abstract final class ApiExceptionMapper {
     _ => ApiErrorType.unknown,
   };
 
+  /// Yanıt gövdesindeki `message` alanı (log için). Backend'in hata gövdesi
+  /// farklıysa burası uyarlanır.
   static String? _extractMessage(Object? data) {
     try {
       final decoded = data is String ? jsonDecode(data) : data;
       if (decoded is! Map) return null;
 
-      final message = decoded['Message'] ?? decoded['message'];
-      final text = message?.toString().trim();
+      final text = decoded['message']?.toString().trim();
       return (text == null || text.isEmpty) ? null : text;
     } catch (_) {
       return null;

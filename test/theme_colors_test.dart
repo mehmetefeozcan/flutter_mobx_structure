@@ -36,8 +36,8 @@ void main() {
     final context = await _pump(tester, ThemeMode.light);
 
     expect(context.colors, AppColorTokens.light);
-    expect(context.colorScheme.brightness, Brightness.light);
-    expect(context.colorScheme.primary, AppOrange.shade500);
+    expect(context.theme.colorScheme.brightness, Brightness.light);
+    expect(context.theme.colorScheme.primary, AppOrange.shade500);
     expect(context.colors.brand.main, AppOrange.shade500);
     expect(context.theme.scaffoldBackgroundColor, AppGray.shade50);
   });
@@ -48,7 +48,7 @@ void main() {
     final context = await _pump(tester, ThemeMode.dark);
 
     expect(context.colors, AppColorTokens.dark);
-    expect(context.colorScheme.brightness, Brightness.dark);
+    expect(context.theme.colorScheme.brightness, Brightness.dark);
     expect(context.colors.contentPrimary, AppBaseColors.white);
     expect(context.theme.scaffoldBackgroundColor, const Color(0xFF0B0E0D));
   });
@@ -133,10 +133,16 @@ void main() {
     testWidgets('ColorScheme rolleri token rollerine eşlenir', (tester) async {
       final context = await _pump(tester, ThemeMode.light);
 
-      expect(context.colorScheme.secondary, context.colors.secondary.main);
-      expect(context.colorScheme.tertiary, context.colors.accent.main);
-      expect(context.colorScheme.error, context.colors.error.main);
-      expect(context.colorScheme.primaryContainer, context.colors.brand.pale);
+      expect(
+        context.theme.colorScheme.secondary,
+        context.colors.secondary.main,
+      );
+      expect(context.theme.colorScheme.tertiary, context.colors.accent.main);
+      expect(context.theme.colorScheme.error, context.colors.error.main);
+      expect(
+        context.theme.colorScheme.primaryContainer,
+        context.colors.brand.pale,
+      );
     });
   });
 }

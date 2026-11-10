@@ -4,20 +4,31 @@ import 'package:flutter_mobx_structure/core/network/result.dart';
 import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 
+enum HttpMethod { get, post, put, patch, delete }
+
 /// Tüm HTTP çağrılarının geçtiği tek nokta.
 ///
-/// - `cancelToken` zorunlu parametredir; iptal edilmesi istenmeyen isteklerde
-///   bilinçli olarak `null` verilir.
-/// - [parse], yanıt gövdesini modele çevirir. Parse sırasında oluşan hata
-///   `ApiErrorType.parsing` olarak döner.
+/// ```dart
+/// _api.request(
+///   HttpMethod.get,
+///   '/users/$id',
+///   cancelToken: token,
+///   parse: (data) => User.fromJson(data as Map<String, dynamic>),
+/// );
+/// ```
+///
+/// - `cancelToken` zorunludur; iptal edilmesi istenmeyen isteklerde bilinçli
+///   olarak `null` verilir.
+/// - [parse] yanıt gövdesini modele çevirir; parse hatası `ApiErrorType.parsing`
+///   olarak döner.
 @lazySingleton
 class CustomDioService {
-  final Dio _dio;
-
   CustomDioService(this._dio);
 
-  Future<Result<T, ApiException>> request<T>(
-    String method,
+  final Dio _dio;
+
+  Future<Result<T>> request<T>(
+    HttpMethod method,
     String path, {
     required CancelToken? cancelToken,
     required T Function(Object? data) parse,
@@ -30,7 +41,9 @@ class CustomDioService {
         path,
         data: data,
         queryParameters: queryParameters,
-        options: (options ?? Options()).copyWith(method: method),
+        options: (options ?? Options()).copyWith(
+          method: method.name.toUpperCase(),
+        ),
         cancelToken: cancelToken,
       );
       return Success(parse(response.data));
@@ -47,89 +60,4 @@ class CustomDioService {
       );
     }
   }
-
-  Future<Result<T, ApiException>> get<T>(
-    String path, {
-    required CancelToken? cancelToken,
-    required T Function(Object? data) parse,
-    Object? data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) => request(
-    'GET',
-    path,
-    cancelToken: cancelToken,
-    parse: parse,
-    data: data,
-    queryParameters: queryParameters,
-    options: options,
-  );
-
-  Future<Result<T, ApiException>> post<T>(
-    String path, {
-    required CancelToken? cancelToken,
-    required T Function(Object? data) parse,
-    Object? data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) => request(
-    'POST',
-    path,
-    cancelToken: cancelToken,
-    parse: parse,
-    data: data ?? {},
-    queryParameters: queryParameters,
-    options: options,
-  );
-
-  Future<Result<T, ApiException>> put<T>(
-    String path, {
-    required CancelToken? cancelToken,
-    required T Function(Object? data) parse,
-    Object? data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) => request(
-    'PUT',
-    path,
-    cancelToken: cancelToken,
-    parse: parse,
-    data: data ?? {},
-    queryParameters: queryParameters,
-    options: options,
-  );
-
-  Future<Result<T, ApiException>> patch<T>(
-    String path, {
-    required CancelToken? cancelToken,
-    required T Function(Object? data) parse,
-    Object? data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) => request(
-    'PATCH',
-    path,
-    cancelToken: cancelToken,
-    parse: parse,
-    data: data ?? {},
-    queryParameters: queryParameters,
-    options: options,
-  );
-
-  Future<Result<T, ApiException>> delete<T>(
-    String path, {
-    required CancelToken? cancelToken,
-    required T Function(Object? data) parse,
-    Object? data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) => request(
-    'DELETE',
-    path,
-    cancelToken: cancelToken,
-    parse: parse,
-    data: data ?? {},
-    queryParameters: queryParameters,
-    options: options,
-  );
 }

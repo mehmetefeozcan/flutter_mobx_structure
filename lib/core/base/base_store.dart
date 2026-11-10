@@ -1,5 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_mobx_structure/core/network/result.dart';
+
+import 'package:dio/dio.dart';
 import 'package:mobx/mobx.dart';
 
 part 'base_store.g.dart';
@@ -10,15 +11,13 @@ abstract class _BaseStore with Store {
   @observable
   int _activeRequests = 0;
 
-  /// Tek hata kaynağı. UI `ApiErrorParser` ile l10n metnine çevirir.
+  /// Sayfada gösterilecek son hata (`BaseViewMixin.onError` bunu dinler).
+  /// İptal edilen ve global ele alınan hatalar buraya yazılmaz.
   @observable
   ApiException? lastError;
 
   @computed
   bool get isLoading => _activeRequests > 0;
-
-  @computed
-  String? get errorMessage => lastError?.message;
 
   /// Sayfa kapanınca iptal edilecek istekler.
   final Set<CancelToken> _activeTokens = {};
@@ -29,19 +28,25 @@ abstract class _BaseStore with Store {
   @action
   void clearError() => lastError = null;
 
-  /// Bir isteği çalıştırır; yükleme ve hata durumunu yönetir.
+  /// Bir isteği çalıştırır; yükleme ve hata durumunu yönetir, sonucu aynen döndürür.
   ///
-  /// - [request] kendisine verilen token'ı servise iletmelidir
-  ///   (`service.getX(cancelToken: token)`), aksi halde iptal edilemez.
-  /// - [key]: aynı key ile yeni istek gelirse önceki istek iptal edilir
-  ///   (arama, yenileme). İptal edilen istek `null` döner, hata göstermez.
+  /// ```dart
+  /// if (await runResult((token) => _service.getItems(cancelToken: token))
+  ///     case Success(:final data)) {
+  ///   items = data;
+  /// }
+  /// ```
+  ///
+  /// - [request] kendisine verilen token'ı servise iletmelidir, aksi halde
+  ///   iptal edilemez.
+  /// - [key]: aynı key ile yeni istek gelirse önceki iptal edilir (arama,
+  ///   yenileme). İptal `Failure(cancelled)` döner, hata olarak gösterilmez.
   /// - [cancelOnDispose]: `false` ise sayfa kapanınca iptal edilmez. POST/PUT/DELETE
   ///   gibi mutasyonlarda kullan; iptal, sunucuda işlemin yapılmadığını garanti etmez.
-  Future<T?> runResult<T>(
-    Future<Result<T, ApiException>> Function(CancelToken token) request, {
+  Future<Result<T>> runResult<T>(
+    Future<Result<T>> Function(CancelToken token) request, {
     String? key,
     bool cancelOnDispose = true,
-    void Function(ApiException error)? onFailure,
   }) async {
     final token = CancelToken();
     if (key != null) {
@@ -57,13 +62,8 @@ abstract class _BaseStore with Store {
 
     try {
       final result = await request(token);
-      return switch (result) {
-        Success<T, ApiException>(:final data) => data,
-        Failure<T, ApiException>(:final error) => _handleFailure<T>(
-          error,
-          onFailure,
-        ),
-      };
+      if (result case Failure(:final error)) _recordError(error);
+      return result;
     } finally {
       _activeTokens.remove(token);
       if (key != null && identical(_keyedTokens[key], token)) {
@@ -73,15 +73,9 @@ abstract class _BaseStore with Store {
     }
   }
 
-  T? _handleFailure<T>(
-    ApiException error,
-    void Function(ApiException)? onFailure,
-  ) {
-    if (error.type == ApiErrorType.cancelled) return null;
-    // Global hata ekranına yönlendirildi, sayfada ayrıca gösterme.
-    if (!error.handledGlobally) runInAction(() => lastError = error);
-    onFailure?.call(error);
-    return null;
+  void _recordError(ApiException error) {
+    if (error.type == ApiErrorType.cancelled || error.handledGlobally) return;
+    runInAction(() => lastError = error);
   }
 
   /// Bekleyen (iptal edilebilir) tüm istekleri keser.

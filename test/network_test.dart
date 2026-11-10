@@ -1,8 +1,7 @@
-import 'package:flutter_mobx_structure/core/enums/app_error_enums.dart';
 import 'package:flutter_mobx_structure/core/network/auth/token_provider.dart';
 import 'package:flutter_mobx_structure/core/network/custom_dio_service.dart';
+import 'package:flutter_mobx_structure/core/network/global_error.dart';
 import 'package:flutter_mobx_structure/core/network/interceptors/auth_interceptor.dart';
-import 'package:flutter_mobx_structure/core/network/interceptors/global_error_handler.dart';
 import 'package:flutter_mobx_structure/core/network/interceptors/global_error_interceptor.dart';
 import 'package:flutter_mobx_structure/core/network/result.dart';
 
@@ -25,10 +24,10 @@ class _FakeTokenProvider implements TokenProvider {
 }
 
 class _FakeGlobalErrorHandler implements GlobalErrorHandler {
-  final handled = <AppErrorEnums>[];
+  final handled = <GlobalError>[];
 
   @override
-  Future<void> handle(AppErrorEnums type) async => handled.add(type);
+  Future<void> handle(GlobalError error) async => handled.add(error);
 }
 
 class _FakeAdapter implements HttpClientAdapter {
@@ -72,8 +71,12 @@ class _FakeAdapter implements HttpClientAdapter {
   return (service: CustomDioService(dio), adapter: adapter);
 }
 
-Future<Result<Object?, ApiException>> _get(CustomDioService service) =>
-    service.get('/x', cancelToken: null, parse: (data) => data);
+Future<Result<Object?>> _get(CustomDioService service) => service.request(
+  HttpMethod.get,
+  '/x',
+  cancelToken: null,
+  parse: (data) => data,
+);
 
 void main() {
   test('token varsa Authorization header eklenir, yoksa eklenmez', () async {
@@ -107,11 +110,11 @@ void main() {
       );
       await Future<void>.delayed(Duration.zero);
 
-      final error = (result as Failure<Object?, ApiException>).error;
+      final error = (result as Failure<Object?>).error;
       expect(error.type, ApiErrorType.unauthorized);
       expect(error.handledGlobally, isTrue);
       expect(tokens.expiredCount, 1);
-      expect(handler.handled, [AppErrorEnums.sessionExpired]);
+      expect(handler.handled, [GlobalError.sessionExpired]);
     },
   );
 
@@ -123,28 +126,62 @@ void main() {
     );
     await Future<void>.delayed(Duration.zero);
 
-    final error = (result as Failure<Object?, ApiException>).error;
+    final error = (result as Failure<Object?>).error;
     expect(error.handledGlobally, isFalse);
     expect(tokens.expiredCount, 0);
     expect(handler.handled, isEmpty);
   });
 
-  test(
-    'art arda gelen 503 hataları cooldown ile tek yönlendirme yapar',
-    () async {
-      final handler = _FakeGlobalErrorHandler();
-      final built = _build(
+  test('503 bakım: handler çağrılır, hata global işaretlenir', () async {
+    final handler = _FakeGlobalErrorHandler();
+    final result = await _get(
+      _build(
         status: 503,
         tokens: _FakeTokenProvider(null),
         handler: handler,
-      );
-      await _get(built.service);
-      await _get(built.service);
-      await Future<void>.delayed(Duration.zero);
+      ).service,
+    );
+    await Future<void>.delayed(Duration.zero);
 
-      expect(handler.handled, [AppErrorEnums.maintenance]);
-    },
-  );
+    final error = (result as Failure<Object?>).error;
+    expect(error.type, ApiErrorType.maintenance);
+    expect(error.handledGlobally, isTrue);
+    expect(handler.handled, [GlobalError.maintenance]);
+  });
+
+  test('global olmayan hata sayfaya bırakılır', () async {
+    final handler = _FakeGlobalErrorHandler();
+    final result = await _get(
+      _build(
+        status: 404,
+        tokens: _FakeTokenProvider('abc'),
+        handler: handler,
+      ).service,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    final error = (result as Failure<Object?>).error;
+    expect(error.type, ApiErrorType.notFound);
+    expect(error.handledGlobally, isFalse);
+    expect(handler.handled, isEmpty);
+  });
+
+  test('yöntem iletilir, gövde verilmezse gönderilmez', () async {
+    final built = _build(
+      status: 200,
+      tokens: _FakeTokenProvider(null),
+      handler: _FakeGlobalErrorHandler(),
+    );
+    await built.service.request(
+      HttpMethod.delete,
+      '/x',
+      cancelToken: null,
+      parse: (data) => data,
+    );
+
+    expect(built.adapter.lastRequest!.method, 'DELETE');
+    expect(built.adapter.lastRequest!.data, isNull);
+  });
 
   test('sunucu mesajı ve tür eşlemesi', () async {
     final result = await _get(
@@ -155,7 +192,7 @@ void main() {
       ).service,
     );
 
-    final error = (result as Failure<Object?, ApiException>).error;
+    final error = (result as Failure<Object?>).error;
     expect(error.type, ApiErrorType.tooManyRequests);
     expect(error.message, 'boom');
     expect(error.statusCode, 429);
@@ -167,13 +204,14 @@ void main() {
       tokens: _FakeTokenProvider(null),
       handler: _FakeGlobalErrorHandler(),
     );
-    final result = await built.service.get<int>(
+    final result = await built.service.request<int>(
+      HttpMethod.get,
       '/x',
       cancelToken: null,
       parse: (data) => (data as Map)['missing'] as int,
     );
 
-    final error = (result as Failure<int, ApiException>).error;
+    final error = (result as Failure<int>).error;
     expect(error.type, ApiErrorType.parsing);
   });
 
@@ -184,13 +222,14 @@ void main() {
       tokens: _FakeTokenProvider(null),
       handler: _FakeGlobalErrorHandler(),
     );
-    final result = await built.service.get<Object?>(
+    final result = await built.service.request<Object?>(
+      HttpMethod.get,
       '/x',
       cancelToken: token,
       parse: (data) => data,
     );
 
-    final error = (result as Failure<Object?, ApiException>).error;
+    final error = (result as Failure<Object?>).error;
     expect(error.type, ApiErrorType.cancelled);
   });
 }

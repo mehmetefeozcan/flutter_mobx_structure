@@ -1,7 +1,6 @@
 import 'package:flutter_mobx_structure/app/app.dart';
 import 'package:flutter_mobx_structure/app/router/app_router.dart';
-import 'package:flutter_mobx_structure/core/enums/app_error_enums.dart';
-import 'package:flutter_mobx_structure/core/network/interceptors/global_error_interceptor.dart';
+import 'package:flutter_mobx_structure/core/network/global_error.dart';
 import 'package:flutter_mobx_structure/core/state/language_store.dart';
 import 'package:flutter_mobx_structure/core/state/theme_store.dart';
 import 'package:flutter_mobx_structure/core/storage/local_storage.dart';
@@ -74,42 +73,50 @@ void main() {
     expect(current(), Brightness.light);
   });
 
-  testWidgets(
-    'hata rotası tipe göre l10n metnini ve yeniden dene butonunu gösterir',
-    (tester) async {
-      final appRouter = AppRouter();
-      await tester.pumpWidget(buildApp(appRouter));
-      await tester.pumpAndSettle();
+  testWidgets('global hata sayfası her durumda giriş noktasına çıkış verir', (
+    tester,
+  ) async {
+    final appRouter = AppRouter();
+    await tester.pumpWidget(buildApp(appRouter));
+    await tester.pumpAndSettle();
 
-      appRouter.router.go(ErrorRoutes.location(AppErrorEnums.noConnection));
-      await tester.pumpAndSettle();
+    appRouter.router.go(ErrorRoutes.location(GlobalError.maintenance));
+    await tester.pumpAndSettle();
+    expect(find.text('Try again'), findsOneWidget);
 
-      expect(find.text('Could not connect to the internet.'), findsOneWidget);
-      expect(find.text('Try again'), findsOneWidget);
-
-      appRouter.router.go(ErrorRoutes.location(AppErrorEnums.maintenance));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Try again'), findsNothing);
-    },
-  );
-
-  test('GlobalErrorInterceptor: hangi yanıtlar global yönlendirilir', () {
+    appRouter.router.go(ErrorRoutes.location(GlobalError.sessionExpired));
+    await tester.pumpAndSettle();
     expect(
-      GlobalErrorInterceptor.typeFor(statusCode: 401, hadToken: true),
-      AppErrorEnums.sessionExpired,
+      find.text('Your session has expired. Please sign in again.'),
+      findsOneWidget,
     );
+
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('My App'), findsOneWidget);
+  });
+
+  testWidgets('bilinmeyen hata türü giriş noktasına yönlenir', (tester) async {
+    final appRouter = AppRouter();
+    await tester.pumpWidget(buildApp(appRouter));
+    await tester.pumpAndSettle();
+
+    appRouter.router.go('${ErrorRoutes.path}/nope');
+    await tester.pumpAndSettle();
+
+    expect(find.text('My App'), findsOneWidget);
+  });
+
+  test('GlobalError: hangi yanıtlar global ele alınır', () {
     expect(
-      GlobalErrorInterceptor.typeFor(statusCode: 401, hadToken: false),
-      isNull,
+      GlobalError.fromResponse(statusCode: 401, hadToken: true),
+      GlobalError.sessionExpired,
     );
+    expect(GlobalError.fromResponse(statusCode: 401, hadToken: false), isNull);
     expect(
-      GlobalErrorInterceptor.typeFor(statusCode: 503, hadToken: false),
-      AppErrorEnums.maintenance,
+      GlobalError.fromResponse(statusCode: 503, hadToken: false),
+      GlobalError.maintenance,
     );
-    expect(
-      GlobalErrorInterceptor.typeFor(statusCode: 404, hadToken: true),
-      isNull,
-    );
+    expect(GlobalError.fromResponse(statusCode: 404, hadToken: true), isNull);
   });
 }

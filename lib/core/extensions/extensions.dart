@@ -1,3 +1,4 @@
+export 'api_exception_localized_extension.dart';
 export 'context_l10n_extension.dart';
 export 'context_theme_extension.dart';
 export 'text_style_weight_extension.dart';

@@ -16,13 +16,6 @@ mixin _$BaseStore on _BaseStore, Store {
     () => super.isLoading,
     name: '_BaseStore.isLoading',
   )).value;
-  Computed<String?>? _$errorMessageComputed;
-
-  @override
-  String? get errorMessage => (_$errorMessageComputed ??= Computed<String?>(
-    () => super.errorMessage,
-    name: '_BaseStore.errorMessage',
-  )).value;
 
   late final _$_activeRequestsAtom = Atom(
     name: '_BaseStore._activeRequests',
@@ -81,8 +74,7 @@ mixin _$BaseStore on _BaseStore, Store {
   String toString() {
     return '''
 lastError: ${lastError},
-isLoading: ${isLoading},
-errorMessage: ${errorMessage}
+isLoading: ${isLoading}
     ''';
   }
 }

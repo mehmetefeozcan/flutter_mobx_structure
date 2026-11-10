@@ -1,6 +1,5 @@
 import 'package:flutter_mobx_structure/core/network/auth/stored_token_provider.dart';
 import 'package:flutter_mobx_structure/core/storage/local_storage.dart';
-import 'package:flutter_mobx_structure/core/storage/secure_encryption_key_store.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce/hive.dart';
@@ -23,10 +22,10 @@ void main() {
 
   test('anahtar ilk çağrıda üretilir, sonra aynı anahtar döner', () async {
     FlutterSecureStorage.setMockInitialValues({});
-    final store = SecureEncryptionKeyStore(const FlutterSecureStorage());
+    const secureStorage = FlutterSecureStorage();
 
-    final first = await store.getOrCreateKey();
-    final second = await store.getOrCreateKey();
+    final first = await LocalStorage.readOrCreateKey(secureStorage);
+    final second = await LocalStorage.readOrCreateKey(secureStorage);
 
     expect(first, hasLength(32));
     expect(second, first);

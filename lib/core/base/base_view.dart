@@ -6,45 +6,49 @@ import 'package:mobx/mobx.dart';
 
 import 'dart:async';
 
-mixin BaseViewMixin<T extends StatefulWidget> on State<T> {
+/// Store'u olan sayfaların ortak yaşam döngüsü: store bir kez oluşturulur, hata
+/// [onError]'a iletilir, sayfa kapanınca reaction'lar ve store temizlenir.
+///
+/// ```dart
+/// class _HomeViewState extends State<HomeView>
+///     with BaseViewMixin<HomeView, HomeStore> {
+///   @override
+///   HomeStore createStore() => getIt<HomeStore>();
+///
+///   @override
+///   Future<void> onInit() => store.load();
+/// }
+/// ```
+///
+/// Store'u olmayan sayfa bu mixin'i kullanmaz.
+mixin BaseViewMixin<T extends StatefulWidget, S extends BaseStore> on State<T> {
+  /// Sayfanın store'u; ilk erişimde [createStore] ile bir kez oluşturulur.
+  late final S store = createStore();
+
   final List<ReactionDisposer> _disposers = [];
 
-  /// Sayfada `getter` değil `field` olarak override et:
-  /// `@override late final store = getIt<X>();`
-  /// Getter + factory DI, her erişimde yeni store üretir.
-  BaseStore? get store => null;
+  S createStore();
 
-  /// Override in page. Senkron kısmında `context`'ten InheritedWidget
-  /// (Theme.of, context.l10n vb.) okunamaz.
+  /// Sayfa açılınca bir kez çalışır. Senkron kısmında `context`'ten
+  /// InheritedWidget (Theme.of, context.l10n vb.) okunamaz.
   Future<void> onInit() async {}
 
-  /// Override in page
   void onDispose() {}
 
-  /// Store'daki `lastError` değiştiğinde çağrılır.
+  /// Store'un `lastError`'ı değiştiğinde çağrılır (snackbar, dialog vb.).
   void onError(ApiException error) {}
 
-  void addReaction(ReactionDisposer disposer) {
-    _disposers.add(disposer);
-  }
-
-  void addReactions(List<ReactionDisposer> disposers) {
-    _disposers.addAll(disposers);
-  }
+  /// Sayfa kapanınca otomatik temizlenecek reaction ekler.
+  void addReaction(ReactionDisposer disposer) => _disposers.add(disposer);
 
   @override
   void initState() {
     super.initState();
-
-    final s = store;
-    if (s != null) {
-      addReaction(
-        reaction((_) => s.lastError, (e) {
-          if (e != null && mounted) onError(e);
-        }),
-      );
-    }
-
+    addReaction(
+      reaction((_) => store.lastError, (error) {
+        if (error != null && mounted) onError(error);
+      }),
+    );
     unawaited(_runInit());
   }
 
@@ -65,10 +69,10 @@ mixin BaseViewMixin<T extends StatefulWidget> on State<T> {
 
   @override
   void dispose() {
-    for (final d in _disposers) {
-      d();
+    for (final dispose in _disposers) {
+      dispose();
     }
-    store?.dispose();
+    store.dispose();
     onDispose();
     super.dispose();
   }
